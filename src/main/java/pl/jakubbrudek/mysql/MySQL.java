@@ -42,7 +42,7 @@ public class MySQL {
         try {
             setConnection(DriverManager.getConnection(url, username, password));
             log.info("Connected!");
-        } catch (SQLException e) {
+        } catch (SQLException e) { 
             log.severe("Error with connection!");
             e.printStackTrace();
         }
