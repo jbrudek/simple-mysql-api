@@ -40,7 +40,7 @@ public class MySQL {
         }
         String url = "jdbc:mysql://" + this.host + ":3306/" + this.database + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
         try {
-            setConnection(DriverManager.getConnection(url, "srv117323", "pZCCzNc9"));
+            setConnection(DriverManager.getConnection(url, username, password));
             log.info("Connected!");
         } catch (SQLException e) {
             log.severe("Error with connection!");
