@@ -1,5 +1,7 @@
 package pl.jakubbrudek.mysql;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.NonNull;
 import lombok.extern.java.Log;
 
@@ -8,49 +10,56 @@ import java.sql.*;
 @Log
 public class MySQL {
 
-    /**
-     * Connection details
-     */
-
+    private static HikariConfig config = new HikariConfig();
+    private static HikariDataSource ds;
     private String host;
     private String database;
     private String username;
     private String password;
     private Boolean visibleQuery;
-    private Connection connection;
 
+    @NonNull
     public MySQL(final String host, final String database, final String username, final String password, final Boolean visibleQuery) {
         this.host = host;
         this.database = database;
         this.username = username;
         this.password = password;
         this.visibleQuery = visibleQuery;
+
+        connectToDatabase();
     }
 
-    private void setConnection(Connection connection) {
-        this.connection = connection;
-    }
-
-    private void connectToDatabase() {
+    public static Connection getConnection() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            log.severe("Driver not found!");
+            return ds.getConnection();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-        String url = "jdbc:mysql://" + this.host + ":3306/" + this.database + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
-        try {
-            setConnection(DriverManager.getConnection(url, username, password));
-            log.info("Connected!");
-        } catch (SQLException e) { 
-            log.severe("Error with connection!");
-            e.printStackTrace();
-        }
+        return null;
     }
 
-    private Boolean isConnected() {
+    public Boolean getVisibleQuery() {
+        return visibleQuery;
+    }
+
+    private void setHikariDataSource(final HikariDataSource hikariDataSource) {
+        ds = hikariDataSource;
+    }
+
+    public void connectToDatabase() {
+        config.setJdbcUrl("jdbc:mysql://" + this.host + ":3306/" + this.database + "?autoReconnect=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+        config.setUsername(username);
+        config.setPassword(password);
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+        setHikariDataSource(new HikariDataSource(config));
+    }
+
+    public Boolean isConnected() {
         try {
-            if (this.connection == null || this.connection.isClosed()) {
+            if (getConnection() == null || getConnection().isClosed()) {
                 return false;
             }
         } catch (SQLException e) {
@@ -61,8 +70,8 @@ public class MySQL {
 
     public void disconnect() {
         try {
-            if (isConnected() && this.connection != null) {
-                this.connection.close();
+            if (isConnected() && getConnection() != null) {
+                getConnection().close();
                 log.severe("Connection closed");
             } else {
                 log.severe("Connection is already terminated");
@@ -73,41 +82,15 @@ public class MySQL {
         }
     }
 
-    public ResultSet query(final String query) {
-        final long prev = System.currentTimeMillis();
-
-        try {
-            if (this.connection == null || !isConnected()) {
-                this.connectToDatabase();
-            }
-            if (visibleQuery) {
-                log.info(query + " [" + (System.currentTimeMillis() - prev) + "ms]");
-            }
-            final Statement statement = this.connection.createStatement();
-            statement.executeQuery(query);
-            return statement.getResultSet();
-        } catch (SQLException e) {
-            log.severe("An error occurred while executing query");
-            e.printStackTrace();
-            return null;
+    private void checkConnection() {
+        if (getConnection() == null || !this.isConnected()) {
+            this.connectToDatabase();
         }
     }
 
-    public void update(final String command) {
-        final long prev = System.currentTimeMillis();
-
-        try {
-            if (!isConnected()) {
-                this.connectToDatabase();
-            }
-            if (visibleQuery) {
-                log.info(command + " [" + (System.currentTimeMillis() - prev) + "ms]");
-            }
-            final Statement statement = this.connection.createStatement();
-            statement.executeUpdate(command);
-        } catch (SQLException e) {
-            log.severe("An error occurred while executing the command");
-            e.printStackTrace();
+    private void visibleQuery(final String query, final Long prev) {
+        if (visibleQuery) {
+            MySQL.log.info(query + " [" + (System.currentTimeMillis() - prev) + "ms]");
         }
     }
 }

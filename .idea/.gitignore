@@ -47,3 +47,7 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+# Default ignored files
+/workspace.xml
+# Datasource local storage ignored files
+/dataSources.local.xml
