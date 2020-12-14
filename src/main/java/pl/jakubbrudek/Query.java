@@ -1,8 +1,9 @@
-package pl.jakubbrudek.mysql;
+package pl.jakubbrudek;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.extern.java.Log;
+import pl.jakubbrudek.mysql.MySQL;
 import pl.jakubbrudek.sqlite.SQLite;
 
 import java.sql.Connection;

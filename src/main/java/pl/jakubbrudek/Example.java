@@ -2,7 +2,6 @@ package pl.jakubbrudek;
 
 import lombok.extern.java.Log;
 import pl.jakubbrudek.mysql.MySQL;
-import pl.jakubbrudek.mysql.Query;
 import pl.jakubbrudek.sqlite.SQLite;
 
 @Log
